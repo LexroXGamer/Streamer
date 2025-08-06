@@ -1,0 +1,98 @@
+        // Contact form with local storage
+        function setupContactForm() {
+            const form = document.getElementById('contactForm');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const formData = new FormData(form);
+                const name = formData.get('name');
+                const email = formData.get('email');
+                const message = formData.get('message');
+                
+                // Save message to local storage
+                saveMessage(name, email, message);
+                
+                // Show success notification
+                showMessageSuccessNotification();
+                
+                // Reset form
+                form.reset();
+                
+                // Optional: Also create mailto link
+                const subject = `رسالة جديدة من ${name}`;
+                const body = `الاسم: ${name}%0D%0A`;
+                const body2 = `البريد الإلكتروني: ${email}%0D%0A%0D%0A`;
+                const body3 = `الرسالة:%0D%0A${message}`;
+                const mailtoLink = `mailto:lexroxgamer@gmail.com?subject=${encodeURIComponent(subject)}&body=${body}${body2}${body3}`;
+                
+                // Optionally open email client after 2 seconds
+                setTimeout(() => {
+                    if (confirm('هل تريد أيضاً فتح تطبيق البريد الإلكتروني؟')) {
+                        window.open(mailtoLink);
+                    }
+                }, 2000);
+            });
+        }
+
+        // Save message to local storage
+        function saveMessage(name, email, message) {
+            const timestamp = new Date().toLocaleString('ar-EG', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            const newMessage = {
+                id: Date.now(),
+                name: name,
+                email: email,
+                message: message,
+                timestamp: timestamp,
+                read: false
+            };
+            
+            // Get existing messages
+            const existingMessages = JSON.parse(localStorage.getItem('lexro_messages') || '[]');
+            
+            // Add new message to the beginning
+            existingMessages.unshift(newMessage);
+            
+            // Keep only the last 50 messages to avoid storage issues
+            if (existingMessages.length > 50) {
+                existingMessages.splice(50);
+            }
+            
+            // Save back to localStorage
+            localStorage.setItem('lexro_messages', JSON.stringify(existingMessages));
+        }
+
+        // Show success notification for message sent
+        function showMessageSuccessNotification() {
+            // Remove any existing notification
+            const existingNotification = document.querySelector('.message-success-notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+
+            // Create new notification
+            const notification = document.createElement('div');
+            notification.className = 'message-success-notification';
+            notification.innerHTML = `
+                <div class="success-icon">✅</div>
+                <div class="success-text">
+                    <strong>تم إرسال الرسالة بنجاح!</strong><br>
+                    <small>شكراً لتواصلك معي، سأقوم بالرد عليك قريباً</small>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            // Remove notification after animation
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 4000);
+        }
